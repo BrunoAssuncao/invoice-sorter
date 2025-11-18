@@ -279,7 +279,7 @@ async function handleImportFile(file) {
   try {
     obj = JSON.parse(text);
   } catch (e) {
-    alert('Invalid file: not valid JSON');
+    alert('Invalid file: not valid JSON!');
     return;
   }
   const ok = confirm('Importing will replace all existing invoices with those from the file. Continue?');
