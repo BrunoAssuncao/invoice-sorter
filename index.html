@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Invoice Tracker</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-bar">
+      <h1>Invoice Tracker</h1>
+      <div class="selection-tools">
+        <span id="selection-sum" class="selection-sum"></span>
+      </div>
+    </div>
+  </header>
+
+  <nav class="tabbar">
+    <button id="tab-add" class="tab active">Add</button>
+    <button id="tab-list" class="tab">List</button>
+  </nav>
+
+  <main>
+    <section id="view-add" class="view active" aria-labelledby="tab-add">
+      <form id="add-form">
+        <label>
+          <span>Title</span>
+          <input type="text" id="title" required placeholder="e.g. Lunch with client" />
+        </label>
+        <label>
+          <span>Amount</span>
+          <input type="number" id="amount" required min="0" step="0.01" inputmode="decimal" placeholder="0.00" />
+        </label>
+        <label>
+          <span>Date</span>
+          <input type="date" id="date" required />
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" id="employeeExpense" />
+          <span>Employee expense</span>
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" id="settled" />
+          <span>Settled</span>
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" id="sentToAccounting" />
+          <span>Sent to accounting</span>
+        </label>
+        <label>
+          <span>Photo</span>
+          <input type="file" id="photo" accept="image/*" capture="environment" />
+        </label>
+        <div id="photo-preview" class="photo-preview hidden">
+          <img id="preview-img" alt="Preview" />
+          <button type="button" id="clear-photo" class="link">Remove photo</button>
+        </div>
+        <button type="submit" class="primary">Save Invoice</button>
+      </form>
+    </section>
+
+    <section id="view-list" class="view" aria-labelledby="tab-list">
+      <div id="list-empty" class="empty">No invoices yet.</div>
+      <div class="bulk-actions">
+        <button type="button" id="select-unsent" class="link">Select all unsent</button>
+        <button type="button" id="select-unsettled" class="link">Select all unsettled</button>
+        <button type="button" id="clear-selection" class="link">Clear selection</button>
+      </div>
+      <ul id="invoice-list" class="list"></ul>
+    </section>
+
+    <section id="view-detail" class="view" aria-live="polite">
+      <button id="back-to-list" class="back-btn" aria-label="Back to list">
+        <span class="icon" aria-hidden="true">←</span>
+        <span class="label">Back to list</span>
+      </button>
+      <form id="detail-form">
+        <input type="hidden" id="detail-id" />
+        <label>
+          <span>Title</span>
+          <input type="text" id="detail-title" required />
+        </label>
+        <label>
+          <span>Amount</span>
+          <input type="number" id="detail-amount" required min="0" step="0.01" inputmode="decimal" />
+        </label>
+        <label>
+          <span>Date</span>
+          <input type="date" id="detail-date" required />
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" id="detail-employeeExpense" />
+          <span>Employee expense</span>
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" id="detail-settled" />
+          <span>Settled</span>
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" id="detail-sentToAccounting" />
+          <span>Sent to accounting</span>
+        </label>
+        <div class="photo-preview">
+          <img id="detail-photo" alt="Invoice photo" class="detail-img hidden" />
+          <div id="detail-photo-empty" class="muted">No photo</div>
+        </div>
+        <button type="submit" class="primary">Save Changes</button>
+        <button type="button" id="delete-invoice" class="danger">Delete</button>
+      </form>
+    </section>
+  </main>
+
+  <footer class="app-footer">Local-only. Data stored in your browser.</footer>
+
+  <script src="/db.js" defer></script>
+  <script src="/app.js" defer></script>
+</body>
+</html>
