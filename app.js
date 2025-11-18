@@ -7,6 +7,13 @@ const viewAdd = document.getElementById('view-add');
 const viewList = document.getElementById('view-list');
 const viewDetail = document.getElementById('view-detail');
 
+// Menu elements
+const menuToggle = document.getElementById('menu-toggle');
+const menuPanel = document.getElementById('menu-panel');
+const btnExport = document.getElementById('btn-export');
+const btnImport = document.getElementById('btn-import');
+const importFileInput = document.getElementById('import-file');
+
 // Add form elements
 const addForm = document.getElementById('add-form');
 const titleEl = document.getElementById('title');
@@ -166,6 +173,157 @@ addForm.addEventListener('submit', async (e) => {
   photoPreview.classList.add('hidden');
   switchTab('list');
 });
+
+// Simple menu toggle
+if (menuToggle && menuPanel) {
+  menuToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = menuPanel.classList.contains('open');
+    if (isOpen) {
+      menuPanel.classList.remove('open');
+      menuToggle.setAttribute('aria-expanded', 'false');
+    } else {
+      menuPanel.classList.add('open');
+      menuToggle.setAttribute('aria-expanded', 'true');
+    }
+  });
+
+  // Close when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!menuPanel.classList.contains('open')) return;
+    const target = e.target;
+    if (menuPanel.contains(target) || menuToggle.contains(target)) return;
+    menuPanel.classList.remove('open');
+    menuToggle.setAttribute('aria-expanded', 'false');
+  });
+}
+
+function downloadTextFile(filename, text) {
+  const blob = new Blob([text], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+async function serializeInvoicesForExport() {
+  const all = await dbGetAll();
+  const out = [];
+  for (const inv of all) {
+    const copy = { ...inv };
+    if (copy.photoBlob instanceof Blob) {
+      copy.photo = await blobToBase64(copy.photoBlob);
+      copy.photoType = copy.photoBlob.type || copy.photoType || null;
+      delete copy.photoBlob;
+    }
+    out.push(copy);
+  }
+  return { version: 1, exportedAt: new Date().toISOString(), items: out };
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+}
+
+function base64ToBlob(dataUrl, type) {
+  if (!dataUrl) return null;
+  const parts = dataUrl.split(',');
+  const meta = parts[0] || '';
+  const b64 = parts[1] || '';
+  const contentType = type || (meta.match(/data:(.*);base64/) || [])[1] || 'application/octet-stream';
+  const binStr = atob(b64);
+  const len = binStr.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) bytes[i] = binStr.charCodeAt(i);
+  return new Blob([bytes], { type: contentType });
+}
+
+async function handleExportClick() {
+  const payload = await serializeInvoicesForExport();
+  const json = JSON.stringify(payload, null, 2);
+  const ts = new Date().toISOString().replace(/[:.]/g, '-');
+  downloadTextFile(`invoice-tracker-backup-${ts}.json`, json);
+}
+
+async function restoreFromJsonObject(obj) {
+  if (!obj || !Array.isArray(obj.items)) {
+    throw new Error('Invalid backup file: missing items');
+  }
+  const restored = [];
+  for (const item of obj.items) {
+    if (!item || !item.id) continue;
+    const copy = { ...item };
+    if (copy.photo && !copy.photoBlob) {
+      const blob = base64ToBlob(copy.photo, copy.photoType);
+      if (blob) copy.photoBlob = blob;
+    }
+    delete copy.photo;
+    restored.push(copy);
+  }
+  await dbClearAll();
+  await dbBulkPut(restored);
+}
+
+async function handleImportFile(file) {
+  const text = await file.text();
+  let obj;
+  try {
+    obj = JSON.parse(text);
+  } catch (e) {
+    alert('Invalid file: not valid JSON');
+    return;
+  }
+  const ok = confirm('Importing will replace all existing invoices with those from the file. Continue?');
+  if (!ok) return;
+  try {
+    await restoreFromJsonObject(obj);
+    await refreshList();
+    await refreshSelectionSum();
+    alert('Import completed.');
+  } catch (e) {
+    alert('Failed to import backup.');
+  }
+}
+
+if (btnExport) {
+  btnExport.addEventListener('click', async () => {
+    try {
+      await handleExportClick();
+    } catch (e) {
+      alert('Failed to export data.');
+    }
+    if (menuPanel) {
+      menuPanel.classList.remove('open');
+      if (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
+
+if (btnImport && importFileInput) {
+  btnImport.addEventListener('click', () => {
+    importFileInput.value = '';
+    importFileInput.click();
+    if (menuPanel) {
+      menuPanel.classList.remove('open');
+      if (menuToggle) menuToggle.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  importFileInput.addEventListener('change', async () => {
+    const file = importFileInput.files && importFileInput.files[0];
+    if (!file) return;
+    await handleImportFile(file);
+  });
+}
 
 async function refreshList() {
   const all = await dbGetAll();

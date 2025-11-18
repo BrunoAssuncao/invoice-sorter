@@ -67,3 +67,26 @@ async function dbDelete(id) {
     tx.objectStore(STORE).delete(id);
   });
 }
+
+async function dbClearAll() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+    tx.objectStore(STORE).clear();
+  });
+}
+
+async function dbBulkPut(invoices) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    const store = tx.objectStore(STORE);
+    for (const inv of invoices || []) {
+      store.put(inv);
+    }
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}

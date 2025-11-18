@@ -13,6 +13,16 @@
       <div class="selection-tools">
         <span id="selection-sum" class="selection-sum"></span>
       </div>
+      <div class="menu-wrapper">
+        <button id="menu-toggle" class="menu-button" aria-label="More options" aria-haspopup="true" aria-expanded="false">
+          <span class="menu-icon"></span>
+        </button>
+        <div id="menu-panel" class="menu-panel" role="menu">
+          <button type="button" id="btn-export" class="menu-item" role="menuitem">Export data</button>
+          <button type="button" id="btn-import" class="menu-item" role="menuitem">Import data</button>
+        </div>
+        <input type="file" id="import-file" accept="application/json" class="menu-import-input" />
+      </div>
     </div>
   </header>
 

@@ -9,6 +9,19 @@ button,input,select{font:inherit}
 .header-bar{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .selection-sum{color:var(--muted);font-size:13px;font-weight:600}
 
+.menu-wrapper{display:flex;align-items:center;gap:8px;position:relative}
+.menu-button{width:32px;height:32px;border-radius:999px;border:1px solid var(--border);background:#0e1528;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
+.menu-button:hover{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in oklab,var(--accent),transparent 80%)}
+.menu-icon,.menu-icon::before,.menu-icon::after{display:block;width:16px;height:2px;border-radius:999px;background:var(--muted);position:relative}
+.menu-icon::before,.menu-icon::after{content:"";position:absolute;left:0}
+.menu-icon::before{top:-5px}
+.menu-icon::after{top:5px}
+.menu-panel{position:absolute;right:0;top:40px;min-width:160px;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:0 12px 30px rgba(0,0,0,.45);padding:4px;display:none;z-index:30}
+.menu-panel.open{display:block}
+.menu-item{width:100%;text-align:left;border:none;background:transparent;color:var(--text);padding:8px 10px;border-radius:8px;font-size:14px;cursor:pointer}
+.menu-item:hover{background:#0e1528}
+.menu-import-input{display:none}
+
 .tabbar{display:flex;gap:8px;padding:8px 12px;position:sticky;top:60px;z-index:19;background:linear-gradient(180deg,var(--card),transparent)}
 .tab{flex:1;border:1px solid var(--border);background:var(--card);color:var(--text);padding:10px;border-radius:10px}
 .tab.active{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in oklab,var(--accent),transparent 70%)}
