@@ -581,7 +581,6 @@ if (btnDownloadSelected) {
     }
 
     const zip = new JSZip();
-    const folder = zip.folder('invoices');
     const items = [];
 
     for (const id of selectedIds) {
@@ -603,7 +602,7 @@ if (btnDownloadSelected) {
       const datePart = (inv.date || '').toString().trim();
       const baseName = datePart ? `${datePart}-${safeTitle}` : safeTitle;
       const photoName = `${baseName}.jpeg`;
-      folder.file(photoName, inv.photoBlob);
+      zip.file(photoName, inv.photoBlob);
     }
 
     try {
