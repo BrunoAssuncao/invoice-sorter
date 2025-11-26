@@ -27,6 +27,17 @@ const photoPreview = document.getElementById('photo-preview');
 const previewImg = document.getElementById('preview-img');
 const clearPhotoBtn = document.getElementById('clear-photo');
 
+// Normalize decimal separator: replace commas with dots while typing
+if (amountEl) {
+  amountEl.addEventListener('input', () => {
+    if (amountEl.value && amountEl.value.includes(',')) {
+      const pos = amountEl.selectionStart;
+      amountEl.value = amountEl.value.replace(/,/g, '.');
+      if (pos != null) amountEl.setSelectionRange(pos, pos);
+    }
+  });
+}
+
 // List elements
 const listEmpty = document.getElementById('list-empty');
 const listEl = document.getElementById('invoice-list');
@@ -91,6 +102,16 @@ const detailSentAcc = document.getElementById('detail-sentToAccounting');
 const detailPhoto = document.getElementById('detail-photo');
 const detailPhotoEmpty = document.getElementById('detail-photo-empty');
 const deleteBtn = document.getElementById('delete-invoice');
+
+if (detailAmount) {
+  detailAmount.addEventListener('input', () => {
+    if (detailAmount.value && detailAmount.value.includes(',')) {
+      const pos = detailAmount.selectionStart;
+      detailAmount.value = detailAmount.value.replace(/,/g, '.');
+      if (pos != null) detailAmount.setSelectionRange(pos, pos);
+    }
+  });
+}
 
 function switchTab(target) {
   document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
@@ -574,22 +595,15 @@ if (btnDownloadSelected) {
     }
 
     for (const inv of items) {
-      const safeId = String(inv.id || '').replace(/[^a-zA-Z0-9_-]/g, '_') || 'invoice';
-      const baseName = `${inv.date || ''}_${safeId}`.trim() || safeId;
-      const jsonName = `${baseName}.json`;
-
-      const plain = { ...inv };
-      if (plain.photoBlob instanceof Blob) {
-        delete plain.photoBlob;
+      if (!(inv.photoBlob instanceof Blob)) {
+        continue;
       }
-
-      folder.file(jsonName, JSON.stringify(plain, null, 2));
-
-      if (inv.photoBlob instanceof Blob) {
-        const photoExt = (inv.photoType && inv.photoType.split('/')[1]) || 'jpg';
-        const photoName = `${baseName}-photo.${photoExt}`;
-        folder.file(photoName, inv.photoBlob);
-      }
+      const rawTitle = (inv.title || 'invoice').toString();
+      const safeTitle = rawTitle.trim().replace(/\s+/g, '-').replace(/[^a-zA-Z0-9_-]/g, '_') || 'invoice';
+      const datePart = (inv.date || '').toString().trim();
+      const baseName = datePart ? `${datePart}-${safeTitle}` : safeTitle;
+      const photoName = `${baseName}.jpeg`;
+      folder.file(photoName, inv.photoBlob);
     }
 
     try {
