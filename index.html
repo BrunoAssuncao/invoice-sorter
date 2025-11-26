@@ -76,6 +76,7 @@
         <button type="button" id="select-unsent" class="link">Select all unsent</button>
         <button type="button" id="select-unsettled" class="link">Select all unsettled</button>
         <button type="button" id="clear-selection" class="link">Clear selection</button>
+        <button type="button" id="download-selected" class="link">Download selected</button>
       </div>
       <ul id="invoice-list" class="list"></ul>
     </section>
@@ -125,6 +126,7 @@
 
   <script src="db.js" defer></script>
   <script src="libs/browser-image-compression.js" defer></script>
+  <script src="https://unpkg.com/jszip@3.7.1/dist/jszip.min.js" defer></script>
   <script src="app.js" defer></script>
 </body>
 </html>

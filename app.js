@@ -34,6 +34,7 @@ const selectionSumEl = document.getElementById('selection-sum');
 const btnSelectUnsent = document.getElementById('select-unsent');
 const btnSelectUnsettled = document.getElementById('select-unsettled');
 const btnClearSelection = document.getElementById('clear-selection');
+const btnDownloadSelected = document.getElementById('download-selected');
 
 // Selection state
 const selectedIds = new Set();
@@ -245,6 +246,17 @@ if (menuToggle && menuPanel) {
 
 function downloadTextFile(filename, text) {
   const blob = new Blob([text], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function downloadBlobFile(filename, blob) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -528,6 +540,66 @@ if (btnClearSelection) {
     selectedIds.clear();
     await refreshList();
     await refreshSelectionSum();
+  });
+}
+
+if (btnDownloadSelected) {
+  btnDownloadSelected.addEventListener('click', async () => {
+    if (!selectedIds.size) {
+      return;
+    }
+    if (typeof JSZip !== 'function') {
+      alert('Download not available: JSZip script not loaded.');
+      return;
+    }
+
+    const all = await dbGetAll();
+    const byId = new Map();
+    for (const inv of all) {
+      byId.set(inv.id, inv);
+    }
+
+    const zip = new JSZip();
+    const folder = zip.folder('invoices');
+    const items = [];
+
+    for (const id of selectedIds) {
+      const inv = byId.get(id);
+      if (!inv) continue;
+      items.push(inv);
+    }
+
+    if (!items.length) {
+      return;
+    }
+
+    for (const inv of items) {
+      const safeId = String(inv.id || '').replace(/[^a-zA-Z0-9_-]/g, '_') || 'invoice';
+      const baseName = `${inv.date || ''}_${safeId}`.trim() || safeId;
+      const jsonName = `${baseName}.json`;
+
+      const plain = { ...inv };
+      if (plain.photoBlob instanceof Blob) {
+        delete plain.photoBlob;
+      }
+
+      folder.file(jsonName, JSON.stringify(plain, null, 2));
+
+      if (inv.photoBlob instanceof Blob) {
+        const photoExt = (inv.photoType && inv.photoType.split('/')[1]) || 'jpg';
+        const photoName = `${baseName}-photo.${photoExt}`;
+        folder.file(photoName, inv.photoBlob);
+      }
+    }
+
+    try {
+      const blob = await zip.generateAsync({ type: 'blob' });
+      const ts = new Date().toISOString().replace(/[:.]/g, '-');
+      const filename = `invoices-selected-${ts}.zip`;
+      downloadBlobFile(filename, blob);
+    } catch (e) {
+      alert('Failed to generate ZIP file for download.');
+    }
   });
 }
 
