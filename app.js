@@ -30,37 +30,37 @@ const clearPhotoBtn = document.getElementById('clear-photo');
 // Normalize decimal separator: replace commas with dots while typing
 if (amountEl) {
   amountEl.addEventListener('input', function(e) {
-  // 1. Get current value
-  let value = this.value;
-
-  // 2. Replace comma with dot immediately
-  if (value.includes(',')) {
-    value = value.replace(',', '.');
-  }
-
-  // 3. Allow only valid numeric characters (0-9 and one dot)
-  // This regex allows: empty string, whole numbers, and decimals
-  // It removes anything that is NOT a number or a dot
-  let cleanValue = value.replace(/[^0-9.]/g, '');
-
-  // 4. Ensure only one dot exists (prevent 12.34.56)
-  const parts = cleanValue.split('.');
-  if (parts.length > 2) {
-    cleanValue = parts[0] + '.' + parts.slice(1).join('');
-  }
-
-  // 5. Update the field if the value changed
-  if (this.value !== cleanValue) {
-    this.value = cleanValue;
-  }
-});
-
-// Optional: Format to 2 decimal places on blur (when user leaves field)
-amountInput.addEventListener('blur', function() {
-    if (this.value) {
-        this.value = parseFloat(this.value).toFixed(2);
+    // 1. Get current value
+    let value = this.value;
+  
+    // 2. Replace comma with dot immediately
+    if (value.includes(',')) {
+      value = value.replace(',', '.');
     }
-});
+  
+    // 3. Allow only valid numeric characters (0-9 and one dot)
+    // This regex allows: empty string, whole numbers, and decimals
+    // It removes anything that is NOT a number or a dot
+    let cleanValue = value.replace(/[^0-9.]/g, '');
+  
+    // 4. Ensure only one dot exists (prevent 12.34.56)
+    const parts = cleanValue.split('.');
+    if (parts.length > 2) {
+      cleanValue = parts[0] + '.' + parts.slice(1).join('');
+    }
+  
+    // 5. Update the field if the value changed
+    if (this.value !== cleanValue) {
+      this.value = cleanValue;
+    }
+  });
+  
+  // Optional: Format to 2 decimal places on blur (when user leaves field)
+  amountEl.addEventListener('blur', function() {
+      if (this.value) {
+          this.value = parseFloat(this.value).toFixed(2);
+      }
+  });
 }
 
 // List elements
