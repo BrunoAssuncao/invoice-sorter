@@ -137,8 +137,8 @@
     <div class="pin-modal-content">
       <h3 id="pin-title">Enter PIN</h3>
       <p id="pin-message">Enter your 6-digit PIN to access OpenAI features.</p>
-      <input type="password" id="pin-input" maxlength="6" pattern="\d{6}" placeholder="000000">
-      <input type="password" id="pin-confirm" maxlength="6" pattern="\d{6}" placeholder="Confirm PIN" style="display: none;">
+      <input type="text" inputmode="numeric" pattern="[0-9]*" id="pin-input" maxlength="6" placeholder="000000">
+      <input type="text" inputmode="numeric" pattern="[0-9]*" id="pin-confirm" maxlength="6" placeholder="Confirm PIN" style="display: none;">
       <input type="text" id="openai-key" placeholder="Enter your OpenAI API key" style="display: none;">
       <div class="buttons">
         <button id="pin-cancel" class="secondary">Cancel</button>

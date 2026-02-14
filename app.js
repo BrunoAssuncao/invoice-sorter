@@ -702,6 +702,15 @@ function hidePinModal() {
   pinModal.classList.remove('active');
 }
 
+// PIN input handler for auto-submit
+pinInput.addEventListener('input', (e) => {
+  const value = e.target.value;
+  // Auto-submit when 6 digits entered and it's not first-time setup
+  if (value.length === 6 && pinConfirm.style.display === 'none') {
+    pinSubmit.click();
+  }
+});
+
 // Handle PIN submission
 pinSubmit.addEventListener('click', async () => {
   const pin = pinInput.value;
@@ -778,11 +787,19 @@ async function extractFromReceipt(imageBlob) {
     return;
   }
 
-  // Show extraction indicator
-  const indicator = document.createElement('div');
-  indicator.className = 'extraction-indicator active';
-  indicator.textContent = 'Extracting data from receipt...';
-  photoPreview.parentNode.insertBefore(indicator, photoPreview.nextSibling);
+  // Create and show sparkle overlay
+  const sparkleOverlay = document.createElement('div');
+  sparkleOverlay.className = 'sparkle-overlay';
+  for (let i = 0; i < 8; i++) {
+    const sparkle = document.createElement('div');
+    sparkle.className = 'sparkle';
+    sparkleOverlay.appendChild(sparkle);
+  }
+  
+  // Find the preview image container
+  const previewContainer = previewImg.parentNode;
+  previewContainer.style.position = 'relative';
+  previewContainer.appendChild(sparkleOverlay);
 
   try {
     // Convert image to base64
@@ -791,20 +808,40 @@ async function extractFromReceipt(imageBlob) {
     // Extract data using OpenAI
     const extracted = await OpenAIManager.extractReceiptData(base64, currentOpenAIKey);
     
-    // Populate form fields
+    // Populate form fields with animations
     if (extracted.date) {
       dateEl.value = extracted.date;
+      dateEl.classList.add('field-pop');
+      setTimeout(() => dateEl.classList.remove('field-pop'), 400);
     }
     if (extracted.amount) {
       amountEl.value = extracted.amount;
+      amountEl.classList.add('field-pop');
+      setTimeout(() => amountEl.classList.remove('field-pop'), 400);
+    }
+    if (extracted.business) {
+      titleEl.value = extracted.business;
+      titleEl.classList.add('field-pop');
+      setTimeout(() => titleEl.classList.remove('field-pop'), 400);
     }
     
-    indicator.textContent = 'Extraction complete!';
-    setTimeout(() => indicator.remove(), 2000);
+    // Remove sparkle overlay with a fade
+    setTimeout(() => {
+      sparkleOverlay.style.opacity = '0';
+      sparkleOverlay.style.transition = 'opacity 0.3s ease-out';
+      setTimeout(() => sparkleOverlay.remove(), 300);
+    }, 500);
     
   } catch (error) {
+    // Remove sparkle overlay on error
+    sparkleOverlay.remove();
+    
+    // Show error message as a subtle indicator
+    const indicator = document.createElement('div');
+    indicator.className = 'extraction-indicator active';
     indicator.textContent = 'Extraction failed: ' + error.message;
     indicator.style.background = '#dc3545';
+    photoPreview.parentNode.insertBefore(indicator, photoPreview.nextSibling);
     setTimeout(() => indicator.remove(), 3000);
   }
 }

@@ -4,14 +4,16 @@ class OpenAIManager {
     const prompt = `Please extract the following information from this receipt image:
 1. Date of purchase (in YYYY-MM-DD format)
 2. Total amount (as a decimal number, e.g., 12.34)
+3. Business name (short, friendly name, max 20 characters)
 
 Return the response as JSON with this exact format:
 {
   "date": "YYYY-MM-DD",
-  "amount": "0.00"
+  "amount": "0.00",
+  "business": "Business Name"
 }
 
-If you cannot find either piece of information, use null for that field.`;
+If you cannot find any piece of information, use null for that field.`;
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -61,7 +63,8 @@ If you cannot find either piece of information, use null for that field.`;
       const extracted = JSON.parse(jsonStr);
       return {
         date: extracted.date || null,
-        amount: extracted.amount || null
+        amount: extracted.amount || null,
+        business: extracted.business || null
       };
     } catch (e) {
       console.error('Failed to parse OpenAI response:', content);
