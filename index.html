@@ -132,6 +132,23 @@
 
   <footer class="app-footer">Local-only. Data stored in your browser.</footer>
 
+  <!-- PIN Authentication Modal -->
+  <div id="pin-modal" class="pin-modal">
+    <div class="pin-modal-content">
+      <h3 id="pin-title">Enter PIN</h3>
+      <p id="pin-message">Enter your 6-digit PIN to access OpenAI features.</p>
+      <input type="password" id="pin-input" maxlength="6" pattern="\d{6}" placeholder="000000">
+      <input type="password" id="pin-confirm" maxlength="6" pattern="\d{6}" placeholder="Confirm PIN" style="display: none;">
+      <input type="text" id="openai-key" placeholder="Enter your OpenAI API key" style="display: none;">
+      <div class="buttons">
+        <button id="pin-cancel" class="secondary">Cancel</button>
+        <button id="pin-submit" class="primary">Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="crypto.js" defer></script>
+  <script src="openai.js" defer></script>
   <script src="db.js" defer></script>
   <script src="libs/browser-image-compression.js" defer></script>
   <script src="libs/jszip.min.js" defer></script>

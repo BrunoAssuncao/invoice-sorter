@@ -65,6 +65,24 @@ input[type="text"],input[type="number"],input[type="date"],input[type="file"]{wi
 
 .app-footer{color:var(--muted);text-align:center;font-size:12px;padding:20px}
 
+/* PIN Modal Styles */
+.pin-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center}
+.pin-modal.active{display:flex}
+.pin-modal-content{background:var(--card);padding:2rem;border-radius:8px;box-shadow:0 4px 20px rgba(0,0,0,.3);max-width:400px;width:90%}
+.pin-modal h3{margin:0 0 1rem 0;color:var(--text)}
+.pin-modal p{margin:0 0 1rem 0;color:var(--muted);font-size:14px}
+.pin-modal input{width:100%;padding:0.75rem;border:1px solid var(--border);border-radius:4px;font-size:1.2rem;text-align:center;letter-spacing:0.2em;margin-bottom:1rem;box-sizing:border-box;background:#0e1528;color:var(--text)}
+.pin-modal .buttons{display:flex;gap:0.5rem;justify-content:flex-end}
+.pin-modal button{padding:0.5rem 1rem;border:none;border-radius:4px;cursor:pointer;font-weight:600}
+.pin-modal .primary{background:var(--accent);color:#fff}
+.pin-modal .primary:hover{background:color-mix(in oklab,var(--accent),black 10%)}
+.pin-modal .secondary{background:var(--border);color:var(--text)}
+.pin-modal .secondary:hover{background:color-mix(in oklab,var(--border),white 10%)}
+
+/* Extraction indicator */
+.extraction-indicator{display:none;padding:0.5rem;background:var(--accent);color:#fff;border-radius:4px;margin-top:0.5rem;text-align:center;font-size:0.9rem}
+.extraction-indicator.active{display:block}
+
 @media(min-width:720px){
   main{max-width:720px;margin:0 auto}
 }

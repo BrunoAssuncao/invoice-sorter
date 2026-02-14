@@ -141,12 +141,20 @@ tabList.addEventListener('click', () => switchTab('list'));
 })();
 
 // Photo preview handling
-photoEl.addEventListener('change', () => {
+photoEl.addEventListener('change', async () => {
   const file = photoEl.files && photoEl.files[0];
   if (!file) { photoPreview.classList.add('hidden'); return; }
   const url = URL.createObjectURL(file);
   previewImg.src = url;
   photoPreview.classList.remove('hidden');
+  
+  // Trigger OpenAI extraction if authenticated
+  if (isAuthenticated) {
+    const photoBlob = await processImageFile(photoEl);
+    if (photoBlob) {
+      extractFromReceipt(photoBlob);
+    }
+  }
 });
 clearPhotoBtn.addEventListener('click', () => {
   photoEl.value = '';
@@ -652,3 +660,170 @@ if (deleteBtn) {
 
 // Initial list
 refreshList();
+
+// OpenAI Integration
+let currentOpenAIKey = null;
+let isAuthenticated = false;
+
+// PIN Modal elements
+const pinModal = document.getElementById('pin-modal');
+const pinTitle = document.getElementById('pin-title');
+const pinMessage = document.getElementById('pin-message');
+const pinInput = document.getElementById('pin-input');
+const pinConfirm = document.getElementById('pin-confirm');
+const openaiKeyInput = document.getElementById('openai-key');
+const pinSubmit = document.getElementById('pin-submit');
+const pinCancel = document.getElementById('pin-cancel');
+
+// Show PIN modal
+function showPinModal(isFirstTime = false) {
+  if (isFirstTime) {
+    pinTitle.textContent = 'Setup OpenAI Integration';
+    pinMessage.textContent = 'Enter a 6-digit PIN and your OpenAI API key to enable receipt extraction.';
+    pinConfirm.style.display = 'block';
+    openaiKeyInput.style.display = 'block';
+    pinSubmit.textContent = 'Setup';
+  } else {
+    pinTitle.textContent = 'Enter PIN';
+    pinMessage.textContent = 'Enter your 6-digit PIN to access OpenAI features.';
+    pinConfirm.style.display = 'none';
+    openaiKeyInput.style.display = 'none';
+    pinSubmit.textContent = 'Submit';
+  }
+  pinModal.classList.add('active');
+  pinInput.value = '';
+  pinConfirm.value = '';
+  openaiKeyInput.value = '';
+  pinInput.focus();
+}
+
+// Hide PIN modal
+function hidePinModal() {
+  pinModal.classList.remove('active');
+}
+
+// Handle PIN submission
+pinSubmit.addEventListener('click', async () => {
+  const pin = pinInput.value;
+  
+  if (!CryptoManager.validatePin(pin)) {
+    alert('Please enter a valid 6-digit PIN.');
+    return;
+  }
+
+  const isFirstTime = pinConfirm.style.display !== 'none';
+  
+  if (isFirstTime) {
+    const confirmPin = pinConfirm.value;
+    const openaiKey = openaiKeyInput.value.trim();
+    
+    if (pin !== confirmPin) {
+      alert('PINs do not match.');
+      return;
+    }
+    
+    if (!openaiKey) {
+      alert('Please enter your OpenAI API key.');
+      return;
+    }
+    
+    try {
+      const encryptedKey = await CryptoManager.encryptKey(openaiKey, pin);
+      await saveConfig('openai_key', encryptedKey);
+      currentOpenAIKey = openaiKey;
+      isAuthenticated = true;
+      hidePinModal();
+    } catch (error) {
+      alert('Failed to save OpenAI key: ' + error.message);
+    }
+  } else {
+    try {
+      const encryptedKey = await getConfig('openai_key');
+      if (!encryptedKey) {
+        showPinModal(true);
+        return;
+      }
+      
+      const decryptedKey = await CryptoManager.decryptKey(encryptedKey, pin);
+      currentOpenAIKey = decryptedKey;
+      isAuthenticated = true;
+      hidePinModal();
+    } catch (error) {
+      alert('Invalid PIN. Please try again.');
+      pinInput.value = '';
+      pinInput.focus();
+    }
+  }
+});
+
+// PIN cancel
+pinCancel.addEventListener('click', () => {
+  hidePinModal();
+});
+
+// Initialize authentication on page load
+async function initializeAuth() {
+  const encryptedKey = await getConfig('openai_key');
+  if (encryptedKey) {
+    showPinModal(false);
+  } else {
+    showPinModal(true);
+  }
+}
+
+// Extract receipt data from image
+async function extractFromReceipt(imageBlob) {
+  if (!isAuthenticated || !currentOpenAIKey) {
+    await initializeAuth();
+    return;
+  }
+
+  // Show extraction indicator
+  const indicator = document.createElement('div');
+  indicator.className = 'extraction-indicator active';
+  indicator.textContent = 'Extracting data from receipt...';
+  photoPreview.parentNode.insertBefore(indicator, photoPreview.nextSibling);
+
+  try {
+    // Convert image to base64
+    const base64 = await blobToBase64(imageBlob);
+    
+    // Extract data using OpenAI
+    const extracted = await OpenAIManager.extractReceiptData(base64, currentOpenAIKey);
+    
+    // Populate form fields
+    if (extracted.date) {
+      dateEl.value = extracted.date;
+    }
+    if (extracted.amount) {
+      amountEl.value = extracted.amount;
+    }
+    
+    indicator.textContent = 'Extraction complete!';
+    setTimeout(() => indicator.remove(), 2000);
+    
+  } catch (error) {
+    indicator.textContent = 'Extraction failed: ' + error.message;
+    indicator.style.background = '#dc3545';
+    setTimeout(() => indicator.remove(), 3000);
+  }
+}
+
+// Helper: Convert blob to base64
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result;
+      const base64 = result.split(',')[1]; // Remove data:image/jpeg;base64, prefix
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+  initializeAuth();
+});

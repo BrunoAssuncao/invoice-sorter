@@ -1,7 +1,8 @@
 // Storage module: IndexedDB implementation
 const DB_NAME = 'invoice-tracker-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Updated version for config store
 const STORE = 'invoices';
+const CONFIG_STORE = 'config';
 
 function openDB() {
   return new Promise((resolve, reject) => {
@@ -11,6 +12,9 @@ function openDB() {
       if (!db.objectStoreNames.contains(STORE)) {
         const store = db.createObjectStore(STORE, { keyPath: 'id' });
         store.createIndex('by_date', 'date', { unique: false });
+      }
+      if (!db.objectStoreNames.contains(CONFIG_STORE)) {
+        db.createObjectStore(CONFIG_STORE, { keyPath: 'key' });
       }
     };
     req.onsuccess = () => resolve(req.result);
@@ -88,5 +92,36 @@ async function dbBulkPut(invoices) {
     }
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
+  });
+}
+
+// Config storage functions for OpenAI key
+async function saveConfig(key, value) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(CONFIG_STORE, 'readwrite');
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+    tx.objectStore(CONFIG_STORE).put({ key, value });
+  });
+}
+
+async function getConfig(key) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(CONFIG_STORE, 'readonly');
+    const req = tx.objectStore(CONFIG_STORE).get(key);
+    req.onsuccess = () => resolve(req.result ? req.result.value : null);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function deleteConfig(key) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(CONFIG_STORE, 'readwrite');
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+    tx.objectStore(CONFIG_STORE).delete(key);
   });
 }
